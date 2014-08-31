@@ -6,8 +6,7 @@
 //for ...
 // queue.push({...})
 //
-var through = require('through'),
-  events = require('events'),
+var events = require('events'),
   util = require('util'),
   _ = require('lodash'),
   ThrottleGroup = require('stream-throttle').ThrottleGroup;
