@@ -1,7 +1,6 @@
 var events = require('events'),
   util = require('util'),
-  _ = require('lodash'),
-  ThrottleGroup = require('stream-throttle').ThrottleGroup;
+  _ = require('lodash');
 
 
 var StreamBouncer = function(options) {
@@ -11,12 +10,16 @@ var StreamBouncer = function(options) {
   _.defaults(options, {
     streamsPerTick: 5,
     poll: 250,
+    throttle: false,
     speed: 1000 * 1024 * 1024 // 1 GB/s as default
   });
 
-  var tg = new ThrottleGroup({
-    rate: options.speed
-  });
+  if (options.throttle) {
+    ThrottleGroup = require('stream-throttle').ThrottleGroup;
+    var tg = new ThrottleGroup({
+      rate: options.speed
+    });
+  }
 
   var self = this;
 
@@ -24,6 +27,7 @@ var StreamBouncer = function(options) {
     _running = false, //bool indicating if stream piping is still occuring
     _sending = false; //bool indicating if streams are still sending data
 
+  //only exposed function.  push a stream container onto into the list
   function push(streamContainer) {
 
     if (streamContainer.source && streamContainer.destination) {
@@ -46,10 +50,12 @@ var StreamBouncer = function(options) {
     self.on(name, cb);
   }
 
+  //forwarding function to EventEmitter.emit
   function _emit(name, data) {
     self.emit(name, data);
   }
 
+  //make worker function
   function _run() {
 
     if (_running) return;
@@ -57,7 +63,7 @@ var StreamBouncer = function(options) {
     _running = true;
 
     //immediately fire the first stream
-
+    _tick();
     //then poll for the rest
     var interval = setInterval(function() {
 
@@ -70,12 +76,16 @@ var StreamBouncer = function(options) {
     }, options.poll);
   }
 
+  //run a single tick of the run method
   function _tick() {
 
     //if we're still sending data from the previous tick
     // then we want to continue waiting
     if (_sending) return;
 
+    //splice the amount of streams to run
+    //if streamsPerTick is greater than the size of the
+    //array then splice knows how to deal with that
     var arrr = queue.splice(0, options.streamsPerTick);
 
     (function(arr, tillComplete) {
@@ -83,6 +93,8 @@ var StreamBouncer = function(options) {
       _sending = (tillComplete > 0);
 
       _.each(arr, function(stream) {
+
+        _emit('start', stream.source);
 
         stream.source.on('error', function(err) {
           _emit('error', err);
@@ -101,9 +113,14 @@ var StreamBouncer = function(options) {
           this.removeAllListeners();
         });
 
-        stream.source
-          .pipe(tg.throttle())
-          .pipe(stream.destination);
+        if (tg) {
+          stream.source
+            .pipe(tg.throttle())
+            .pipe(stream.destination);
+        } else {
+          stream.source
+            .pipe(stream.destination);
+        }
 
       });
     })(arrr, arrr.length);

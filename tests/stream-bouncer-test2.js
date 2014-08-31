@@ -4,11 +4,18 @@ var StreamBouncer = require('../stream-bouncer');
 var sb = new StreamBouncer({
   streamsPerTick: 1,
   poll: 1000,
+  throttle: true,
+  speed: 0.5*1024*1024 // 500 kB/s
 });
 
 sb.on('error', function(err) {
   console.error(err);
 });
+
+sb.on('start', function(str) {
+  console.log("starting ", str.path);
+});
+
 
 var counter = 1;
 

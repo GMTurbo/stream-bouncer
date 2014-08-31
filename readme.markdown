@@ -59,24 +59,38 @@ Create a new instance of a bouncer.
 ### bouncer.push({source: readStream, destination: writeStream})
 add a stream to the queue
 
+#Events
+## bouncer.on('start', function(str){...});
+Fires when one of the streams in the queue starts, passes a stream to the callback.
+str is the stream.source object.
+## bouncer.on('close', function(str){...});
+fires when one of the streams in the queue finishes, passes a stream to the callback.
+str is the stream.source object.
+## bouncer.on('count', function(count){...});
+fires when the number of streams in the queue changes, passes a number to the callback.
+## bouncer.on('error', function(err){...});
+forwards an error object to the cb.
+
 # Options
 ```javascript
 var defaultOptions  = {
   streamsPerTick: 5, //how many simultaneous streams to process per tick
   poll: 250, //how long to wait before process {count} # of streams in ms
-  speed: 1000 * 1024 * 1024 // transfer speed, 1 GB/s as default
+  throttle: false, // throttle the streams speed.
+  speed: null //only required if throttling is active
 }
 ```
 ###example of overloading options
 ```javascript
 var bouncer = new StreamBouncer({
   streamsPerTick: 1,
-  poll: 1000
+  poll: 1000,
+  throttle: true,
   speed: 2 * 1024 * 1024 //max 2 MB/s tranfer
 });
 ```
 
-# install
+# Install
 
 With [npm](https://npmjs.org) do:
 
@@ -85,6 +99,6 @@ npm install stream-bouncer
 ```
 to get the library.
 
-# license
+# License
 
 MIT
