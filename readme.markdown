@@ -12,9 +12,8 @@ var fs = require('fs');
 var StreamBouncer = require('stream-bouncer');
 
 var bouncer = new StreamBouncer({
-  count: 1,
+  streamsPerTick: 1,
   poll: 1000
-  //speed: 2 * 1024 * 1024 //max 10 MB/s tranfer
 });
 
 bouncer.on('error', function(err) {
@@ -54,7 +53,7 @@ var StreamBouncer = require('stream-bouncer');
 
 ### var bouncer = new StreamBouncer();
 
-Create a new instance of a ring.
+Create a new instance of a bouncer.
 
 ### bouncer.push({source: readStream, destination: writeStream})
 add a stream to the queue
@@ -62,10 +61,18 @@ add a stream to the queue
 # Options
 ```javascript
 var defaultOptions  = {
-  count: 5, //how many simultaneous streams to process per tick
-  poll: 250, //how long to wait before process {count} # of streams
+  streamsPerTick: 5, //how many simultaneous streams to process per tick
+  poll: 250, //how long to wait before process {count} # of streams in ms
   speed: 1000 * 1024 * 1024 // transfer speed, 1 GB/s as default
 }
+```
+###example of overloading options
+```javascript
+var bouncer = new StreamBouncer({
+  streamsPerTick: 1,
+  poll: 1000
+  speed: 2 * 1024 * 1024 //max 2 MB/s tranfer
+});
 ```
 
 # install
