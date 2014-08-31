@@ -20,7 +20,7 @@ var StreamBouncer = function(options) {
   _.extend({
     count: 5,
     poll: 250,
-    speed: 0.5 * 1024 * 1024 // 1 GB/s as default
+    speed: 1000 * 1024 * 1024 // 1 GB/s as default
   }, options);
 
   var tg = new ThrottleGroup({
@@ -32,7 +32,8 @@ var StreamBouncer = function(options) {
   options.poll = options.poll || 250;
 
   var queue = [],
-    _running = false;
+    _running = false, //bool indicating if stream piping is still occuring
+    _sending = false; //bool indicating if streams are still sending data
 
   function push(streamContainer) {
 
@@ -62,7 +63,7 @@ var StreamBouncer = function(options) {
 
   function _run() {
 
-    if(_running) return;
+    if (_running) return;
 
     _running = true;
 
@@ -72,18 +73,21 @@ var StreamBouncer = function(options) {
     //then poll for the rest
     var interval = setInterval(function() {
 
-        _tick();
-        //once queue is empty, then stop polling
-        if (queue.length == 0) {
-          clearInterval(interval);
-          _running = false;
-        }
+      _tick();
+      //once queue is empty, then stop polling
+      if (queue.length == 0 && !_sending) {
+        clearInterval(interval);
+        _running = false;
+      }
     }, options.poll);
   }
 
-  function _tick(){
+  function _tick() {
 
-    _.each(queue.splice(0, options.count), function(stream) {
+    var arr = queue.splice(0, options.count),
+      toComplete = arr.length;
+
+    _.each(arr, function(stream) {
 
       stream.source.on('error', function(err) {
         _emit('error', err);
@@ -93,6 +97,8 @@ var StreamBouncer = function(options) {
 
       stream.source.on('close', function() {
         _emit('close', this);
+        toComplete--;
+        _sending = (toComplete == 0);
         this.destroy();
         this.removeAllListeners();
       });
