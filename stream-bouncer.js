@@ -16,14 +16,14 @@ var StreamBouncer = function(options) {
 
   options = options || {};
 
-  _.extend({
+  _.defaults(options, {
     count: 5,
     poll: 250,
     speed: 1000 * 1024 * 1024 // 1 GB/s as default
-  }, options);
+  });
 
   var tg = new ThrottleGroup({
-    rate: speed
+    rate: options.speed
   });
 
   var self = this;
@@ -67,7 +67,6 @@ var StreamBouncer = function(options) {
     _running = true;
 
     //immediately fire the first stream
-    _tick();
 
     //then poll for the rest
     var interval = setInterval(function() {
@@ -83,27 +82,41 @@ var StreamBouncer = function(options) {
 
   function _tick() {
 
-    var arr = queue.splice(0, options.count),
-      toComplete = arr.length;
+    //if we're still sending data from the previous tick
+    // then we want to continue waiting
+    if (_sending) return;
 
-    _.each(arr, function(stream) {
+    var arrr = queue.splice(0, options.count);
 
-      stream.source.on('error', function(err) {
-        _emit('error', err);
-        this.destroy();
-        this.removeAllListeners();
+    (function(arr, tillComplete) {
+
+      _sending = (tillComplete > 0);
+
+      _.each(arr, function(stream) {
+
+        stream.source.on('error', function(err) {
+          _emit('error', err);
+          tillComplete--;
+          _sending = (tillComplete != 0);
+          this.destroy();
+          this.removeAllListeners();
+        });
+
+        stream.source.on('close', function() {
+          _emit('close', this);
+          _emit('count', queue.length);
+          tillComplete--;
+          _sending = (tillComplete != 0);
+          this.destroy();
+          this.removeAllListeners();
+        });
+
+        stream.source
+          .pipe(tg.throttle())
+          .pipe(stream.destination);
+
       });
-
-      stream.source.on('close', function() {
-        _emit('close', this);
-        toComplete--;
-        _sending = (toComplete == 0);
-        this.destroy();
-        this.removeAllListeners();
-      });
-
-      stream.source.pipe(tg.throttle()).pipe(stream.destination);
-    });
+    })(arrr, arrr.length);
 
   }
 
