@@ -1,11 +1,3 @@
-// i want to have this
-// var queue = new Stream-Bouncer({count: 5, poll: 250, ...})
-// but i want to be able to call
-// queue.push({source: fs.createReadStream('blah'), destination: fs.createWriteStream('blahout')});
-
-//for ...
-// queue.push({...})
-//
 var events = require('events'),
   util = require('util'),
   _ = require('lodash'),
@@ -17,7 +9,7 @@ var StreamBouncer = function(options) {
   options = options || {};
 
   _.defaults(options, {
-    count: 5,
+    streamsPerTick: 5,
     poll: 250,
     speed: 1000 * 1024 * 1024 // 1 GB/s as default
   });
@@ -86,7 +78,7 @@ var StreamBouncer = function(options) {
     // then we want to continue waiting
     if (_sending) return;
 
-    var arrr = queue.splice(0, options.count);
+    var arrr = queue.splice(0, options.streamsPerTick);
 
     (function(arr, tillComplete) {
 
@@ -104,7 +96,7 @@ var StreamBouncer = function(options) {
 
         stream.source.on('close', function() {
           _emit('close', this);
-          _emit('count', queue.length);
+          _emit('count', queue.length + tillComplete);
           tillComplete--;
           _sending = (tillComplete != 0);
           this.destroy();
