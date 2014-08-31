@@ -20,8 +20,6 @@ var StreamBouncer = function(options) {
 
   var self = this;
 
-  options.poll = options.poll || 250;
-
   var queue = [],
     _running = false, //bool indicating if stream piping is still occuring
     _sending = false; //bool indicating if streams are still sending data
