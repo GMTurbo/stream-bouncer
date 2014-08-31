@@ -1,5 +1,5 @@
 {
-  "name": "streambouncer",
+  "name": "stream-bouncer",
   "version": "0.0.1",
   "description": "a stream queue module",
   "main": "stream-bouncer.js",

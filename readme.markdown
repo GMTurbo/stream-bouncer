@@ -1,4 +1,5 @@
 # stream-bouncer
+[![NPM version](https://badge.fury.io/js/stream-bouncer.svg)](http://badge.fury.io/js/stream-bouncer)
 
 ![alt-text](http://jeffreyhill.typepad.com/.a/6a00d8341d417153ef01156f3266b2970c-pi)
 
