@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/GMTurbo/stream-bouncer",
   "dependencies": {
-    "lodash": "^2.4.1",
     "stream-throttle": "^0.1.3"
   }
 }

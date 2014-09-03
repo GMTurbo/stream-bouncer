@@ -5,7 +5,7 @@ var sb = new StreamBouncer({
   streamsPerTick: 3,
   poll: 250,
   throttle: true,
-  speed: 20*1024*1024 // 500 kB/s
+  speed: 20*1024*1024 // 20 MB/s
 });
 
 sb.on('error', function(err) {

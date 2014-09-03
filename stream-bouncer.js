@@ -1,15 +1,14 @@
 var events = require('events'),
-  util = require('util'),
-  _ = require('lodash');
+  util = require('util');
 
 var StreamBouncer = function(options) {
 
   options = options || {};
 
-  _.defaults(options, {
-    streamsPerTick: 5,
-    poll: 250
-  });
+  options.poll = options.poll || 250;
+  options.streamsPerTick = options.streamsPerTick || 250;
+  options.throttle = options.throttle || false;
+  options.speed = options.speed || false;
 
   if (options.poll < 250) {
     options.poll = 250;
