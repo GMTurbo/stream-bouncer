@@ -2,17 +2,19 @@ var events = require('events'),
   util = require('util'),
   _ = require('lodash');
 
-
 var StreamBouncer = function(options) {
 
   options = options || {};
 
   _.defaults(options, {
     streamsPerTick: 5,
-    poll: 250,
-    throttle: false,
-    speed: 1000 * 1024 * 1024 // 1 GB/s as default
+    poll: 250
   });
+
+  if (options.poll < 250) {
+    options.poll = 250;
+    console.log('stream-bouncer: polling interval minimum is 250ms');
+  }
 
   if (options.throttle) {
     ThrottleGroup = require('stream-throttle').ThrottleGroup;
@@ -25,8 +27,8 @@ var StreamBouncer = function(options) {
 
   var queue = [],
     _running = false, //bool indicating if stream piping is still occuring
-    _sending = false; //bool indicating if streams are still sending data
-
+    _sending = false, //bool indicating if streams are still sending data
+    _runCount = 0;
   //only exposed function.  push a stream container onto into the list
   function push(streamContainer) {
 
@@ -76,55 +78,48 @@ var StreamBouncer = function(options) {
     }, options.poll);
   }
 
-  //run a single tick of the run method
   function _tick() {
 
-    //if we're still sending data from the previous tick
-    // then we want to continue waiting
-    if (_sending) return;
+    if (_runCount == options.streamsPerTick) {
+      return;
+    }
+    var streamContainer = queue.splice(0, 1);
+    if (streamContainer[0])
+      _beginStream(streamContainer[0]);
 
-    //splice the amount of streams to run
-    //if streamsPerTick is greater than the size of the
-    //array then splice knows how to deal with that
-    var arrr = queue.splice(0, options.streamsPerTick);
+  }
 
-    (function(arr, tillComplete) {
+  function _beginStream(streamContainer) {
 
-      _sending = (tillComplete > 0);
+    _runCount++;
 
-      _.each(arr, function(stream) {
+    _emit('start', streamContainer.source);
 
-        _emit('start', stream.source);
+    streamContainer.source.on('error', function(err) {
+      _emit('error', err);
+      _runCount--;
+      _sending = (_runCount != 0);
+      this.destroy();
+      this.removeAllListeners();
+    });
 
-        stream.source.on('error', function(err) {
-          _emit('error', err);
-          tillComplete--;
-          _sending = (tillComplete != 0);
-          this.destroy();
-          this.removeAllListeners();
-        });
+    streamContainer.source.on('close', function() {
+      _runCount--;
+      _emit('close', this);
+      _emit('count', queue.length + _runCount);
+      _sending = (_runCount != 0);
+      this.destroy();
+      this.removeAllListeners();
+    });
 
-        stream.source.on('close', function() {
-          _emit('close', this);
-          _emit('count', queue.length + tillComplete);
-          tillComplete--;
-          _sending = (tillComplete != 0);
-          this.destroy();
-          this.removeAllListeners();
-        });
-
-        if (tg) {
-          stream.source
-            .pipe(tg.throttle())
-            .pipe(stream.destination);
-        } else {
-          stream.source
-            .pipe(stream.destination);
-        }
-
-      });
-    })(arrr, arrr.length);
-
+    if (tg) {
+      streamContainer.source
+        .pipe(tg.throttle())
+        .pipe(streamContainer.destination);
+    } else {
+      streamContainer.source
+        .pipe(streamContainer.destination);
+    }
   }
 
   return {
