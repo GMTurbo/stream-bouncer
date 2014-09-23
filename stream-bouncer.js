@@ -5,14 +5,14 @@ var StreamBouncer = function(options) {
 
   options = options || {};
 
-  options.poll = options.poll || 250;
-  options.streamsPerTick = options.streamsPerTick || 250;
+  options.poll = options.poll || 100;
+  options.streamsPerTick = options.streamsPerTick || 3;
   options.throttle = options.throttle || false;
   options.speed = options.speed || false;
 
-  if (options.poll < 250) {
-    options.poll = 250;
-    console.log('stream-bouncer: polling interval minimum is 250ms');
+  if (options.poll < 100) {
+    options.poll = 100;
+    console.log('stream-bouncer: polling interval minimum is 100ms');
   }
 
   if (options.throttle) {
