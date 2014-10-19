@@ -2,10 +2,10 @@ var fs = require('fs');
 var StreamBouncer = require('../stream-bouncer');
 
 var sb = new StreamBouncer({
-  streamsPerTick: 1,
-  poll: 1000,
+  streamsPerTick: 5,
+  poll: 250,
   throttle: true,
-  speed: 0.5*1024*1024 // 500 kB/s
+  speed: 10*1024*1024 // 500 kB/s
 });
 
 sb.on('error', function(err) {

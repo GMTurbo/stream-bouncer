@@ -1,6 +1,6 @@
 {
   "name": "stream-bouncer",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "a stream queue module",
   "main": "stream-bouncer.js",
   "scripts": {
