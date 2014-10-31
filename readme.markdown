@@ -34,6 +34,7 @@ bouncer.on('count', function(count) {
 for (var i = 0; i < 10; i++) {
   bouncer.push({
     source: fs.createReadStream(['/Users/gabrieltesta/Downloads/sync/', i, '.mp3'].join('')),
+    middle: i % 2 == 0 ? zlib.createGzip() : undefined,
     destination: fs.createWriteStream(['/Users/gabrieltesta/Downloads/slave/', i*counter, '.mp3'].join('')),
   });
 }
@@ -56,8 +57,10 @@ var StreamBouncer = require('stream-bouncer');
 
 Create a new instance of a bouncer.
 
-### bouncer.push({source: readStream, destination: writeStream})
+### bouncer.push({source: readStream, middle: someStream, destination: writeStream})
 add a stream to the queue
+
+*middle isn't required*
 
 #Events
 ## bouncer.on('start', function(str){...});
