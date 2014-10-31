@@ -57,10 +57,16 @@ var StreamBouncer = require('stream-bouncer');
 
 Create a new instance of a bouncer.
 
-### bouncer.push({source: readStream, middle: someStream, destination: writeStream})
-add a stream to the queue
+## Use it
 
-*middle isn't required*
+```javascript
+bouncer.push({
+  source: readStream,
+  middle: someStream, //middle isn't required
+  destination: writeStream
+});
+
+```
 
 #Events
 ## bouncer.on('start', function(str){...});
