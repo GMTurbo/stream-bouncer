@@ -1,6 +1,6 @@
 {
   "name": "stream-bouncer",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "description": "a stream queue module",
   "main": "stream-bouncer.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "queue",
     "multi-stream"
   ],
-  "author": "killtheliterate & gmturbo",
+  "author": "gmturbo",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/GMTurbo/stream-bouncer/issues"

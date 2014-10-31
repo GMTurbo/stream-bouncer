@@ -1,5 +1,6 @@
 var events = require('events'),
-  util = require('util');
+  util = require('util'),
+  identityStream = require('identity-stream');
 
 var StreamBouncer = function(options) {
 
@@ -32,6 +33,8 @@ var StreamBouncer = function(options) {
   function push(streamContainer) {
 
     if (streamContainer.source && streamContainer.destination) {
+
+      streamContainer.middle = streamContainer.middle || new identityStream();
 
       queue.push(streamContainer);
 
@@ -113,10 +116,12 @@ var StreamBouncer = function(options) {
 
     if (tg) {
       streamContainer.source
+        .pipe(streamContainer.middle)
         .pipe(tg.throttle())
         .pipe(streamContainer.destination);
     } else {
       streamContainer.source
+        .pipe(streamContainer.middle)
         .pipe(streamContainer.destination);
     }
   }

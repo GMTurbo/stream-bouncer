@@ -1,11 +1,12 @@
 var fs = require('fs');
 var StreamBouncer = require('../stream-bouncer');
+var zlib = require('zlib');
 
 var sb = new StreamBouncer({
   streamsPerTick: 3,
-  poll: 250,
-  throttle: true,
-  speed: 20*1024*1024 // 20 MB/s
+  poll: 100
+  //throttle: true,
+  //speed: 20*1024*1024 // 20 MB/s
 });
 
 sb.on('error', function(err) {
@@ -28,7 +29,8 @@ sb.on('count', function(count) {
 
 for (var i = 0; i < 10; i++) {
   sb.push({
-    source: fs.createReadStream(['C:\\Users\\gtesta\\Documents\\node\\stream-bouncer\\tests\\testData\\', i, '.zip'].join('')),
-    destination: fs.createWriteStream(['C:\\Users\\gtesta\\Documents\\node\\stream-bouncer\\tests\\testData\\out\\', i, '.zip'].join('')),
+    source: fs.createReadStream("C:/Users/gtesta/Documents/node/smasher/test/codeschool_1366.mp4"),
+    middle: i % 2 == 0 ? zlib.createGzip() : undefined,
+    destination: fs.createWriteStream('C:/Users/gtesta/Documents/node/smasher/test/codeschool_1366' + i + '.mp4'),
   });
 }
